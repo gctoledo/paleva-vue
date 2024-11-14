@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PaLeva - Painel da Cozinha</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div id="app">
+      <aside>
+        <h2 class="sidebar-title">PaLeva</h2>
+
+        <form @submit.prevent="getOrders" class="search-form">
+          <input
+            type="text"
+            placeholder="Código do restaurante"
+            v-model="restaurant_code"
+            class="search-input"
+            required
+          />
+          <label for="status" class="status-label">Status</label>
+          <select
+            name="status"
+            id="status"
+            v-model="order_status"
+            class="search-select"
+          >
+            <option value="all">Todos</option>
+            <option value="awaiting_confirmation">
+              Aguardando confirmação
+            </option>
+            <option value="preparing">Preparando</option>
+            <option value="canceled">Cancelado</option>
+            <option value="ready">Pronto</option>
+            <option value="delivered">Entregue</option>
+          </select>
+          <button type="submit" class="button button-ready">Buscar</button>
+        </form>
+      </aside>
+
+      <main>
+        <header class="header">
+          <h1 v-if="!selected_order">Pedidos</h1>
+          <h1 v-else>Detalhes do Pedido #{{ selected_order.code }}</h1>
+        </header>
+
+        <section v-if="!selected_order" class="order-list">
+          <span v-if="orders.length === 0">Nenhum pedido encontrado.</span>
+          <article
+            v-else
+            class="order-card"
+            v-for="order in orders"
+            :key="order.code"
+          >
+            <div class="order-header">
+              <h3 @click="viewOrder(order)">Pedido #{{ order.code }}</h3>
+              <p class="order-details">Cliente: {{ order.customer_name }}</p>
+              <p class="order-details">
+                Entrada: {{ formatDate(order.created_at) }}
+              </p>
+              <p class="order-details" :class="statusClass(order.status)">
+                {{ formatOrderStatus(order.status) }}
+              </p>
+            </div>
+            <div class="order-buttons">
+              <button
+                v-if="order.status === 'awaiting_confirmation'"
+                class="button button-accept"
+                @click="handlePreparing(order)"
+              >
+                Aceitar pedido
+              </button>
+              <button
+                v-if="order.status === 'preparing'"
+                class="button button-ready"
+                @click="handleReady(order)"
+              >
+                Marcar como pronto
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <section v-else>
+          <button @click="backToOrders" class="button button-accept">
+            Voltar aos pedidos
+          </button>
+          <div class="order-details-container">
+            <div class="order-details-header">
+              <h2>Pedido #{{ selected_order.code }}</h2>
+              <p>Status: {{ formatOrderStatus(selected_order.status) }}</p>
+            </div>
+
+            <div class="order-info">
+              <p class="order-info-item">
+                <strong class="order-info-label">Cliente:</strong>
+                <span class="order-info-value"
+                  >{{ selected_order.customer_name }}</span
+                >
+              </p>
+              <p class="order-info-item">
+                <strong class="order-info-label">Data de Entrada:</strong>
+                <span class="order-info-value"
+                  >{{ formatDate(selected_order.created_at) }}</span
+                >
+              </p>
+            </div>
+
+            <div class="order-items-list">
+              <h3>Itens do Pedido:</h3>
+              <div
+                class="order-item"
+                v-for="item in selected_order.order_items"
+                :key="item.id"
+              >
+                <p class="order-item-name">
+                  {{ item.dish?.name ?? item.drink?.name }} -
+                  <span>{{ item.portion.description }}</span>
+                </p>
+                <p class="order-item-note" v-if="item.note">
+                  Obs: {{ item.note }}
+                </p>
+              </div>
+            </div>
+
+            <div class="order-buttons">
+              <button
+                v-if="selected_order.status === 'awaiting_confirmation'"
+                class="button button-accept"
+                @click="handlePreparing(selected_order)"
+              >
+                Aceitar pedido
+              </button>
+              <button
+                v-if="selected_order.status === 'preparing'"
+                class="button button-ready"
+                @click="handleReady(selected_order)"
+              >
+                Marcar como pronto
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
