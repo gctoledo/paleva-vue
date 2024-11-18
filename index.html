@@ -84,9 +84,19 @@
         </section>
 
         <section v-else>
-          <button @click="backToOrders" class="button button-accept">
-            Voltar aos pedidos
-          </button>
+          <div class="action-buttons">
+            <button @click="backToOrders" class="button button-accept">
+              Voltar aos pedidos
+            </button>
+
+            <button
+              v-if="selected_order.status === 'awaiting_confirmation' || selected_order.status === 'preparing'"
+              @click="openCancelModal"
+              class="button button-cancel"
+            >
+              Cancelar pedido
+            </button>
+          </div>
           <div class="order-details-container">
             <div class="order-details-header">
               <h2>Pedido #{{ selected_order.code }}</h2>
@@ -141,6 +151,30 @@
                 Marcar como pronto
               </button>
             </div>
+          </div>
+
+          <div v-if="showCancelModal" class="modal">
+            <form
+              @submit.prevent="handleCancel(selected_order)"
+              class="modal-content"
+            >
+              <textarea
+                v-model="cancellationReason"
+                placeholder="Informe o motivo do cancelamento"
+                required
+                minlength="10"
+              >
+              </textarea>
+
+              <div class="modal-buttons">
+                <button type="submit" class="button button-cancel">
+                  Confirmar cancelamento
+                </button>
+                <button @click="closeCancelModal" class="button button-accept">
+                  Fechar
+                </button>
+              </div>
+            </form>
           </div>
         </section>
       </main>
